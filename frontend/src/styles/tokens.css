@@ -1,0 +1,52 @@
+:root {
+  --color-bg: #000;
+  --color-text: #fff;
+  --color-accent: #D4A017;
+  --color-accent-hover: #C49315;
+  --color-muted: #666;
+  --color-surface: #111;
+  --color-surface-hover: #1a1a1a;
+  --color-border: #222;
+  --color-danger: #E53E3E;
+  --color-success: #38A169;
+
+  --font-display: 'Inter Tight', sans-serif;
+  --font-body: 'Inter', sans-serif;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  --text-6xl: 3.75rem;
+  --text-hero: clamp(3rem, 6vw, 5rem);
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --weight-extrabold: 800;
+  --weight-black: 900;
+
+  --radius-none: 0px;
+  --radius-sm: 2px;
+  --radius-pill: 999px;
+
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 40px;
+  --space-2xl: 64px;
+  --space-section: 80px;
+
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.6);
+
+  --transition-fast: 150ms ease;
+  --transition-base: 300ms ease-out;
+  --transition-slow: 500ms ease-out;
+}
