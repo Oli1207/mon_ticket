@@ -228,6 +228,9 @@ class EventStaffListCreateView(OrgEventMixin, generics.ListCreateAPIView):
         user = User.objects.filter(email=email, is_active=True).first()
         if user is None:
             raise ValidationError({'email': ["Aucun compte Mon Ticket avec cet email. Demande-lui d'en creer un, puis reessaie."]})
+        if not user.is_email_verified:
+            # Sans preuve de possession de l'email, n'importe qui pourrait se faire passer pour ce membre du staff.
+            raise ValidationError({'email': ["Cette personne doit d'abord confirmer son adresse email, puis reessaie."]})
         try:
             with transaction.atomic():
                 staff = serializer.save(event=event, user=user, added_by=self.request.user)

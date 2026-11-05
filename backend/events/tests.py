@@ -118,6 +118,10 @@ class OrganizerEventTests(APITestCase):
         self.auth(self.org.owner)
         url = f'{self.base}staffed/staff/'
         self.assertEqual(self.client.post(url, {'email': 'ghost@example.com', 'role': 'scanner'}, format='json').status_code, 400)
+        self.make_user('pending@example.com', verified=False)
+        res = self.client.post(url, {'email': 'pending@example.com', 'role': 'scanner'}, format='json')
+        self.assertEqual(res.status_code, 400)
+        self.assertFalse(EventStaff.objects.filter(email='pending@example.com').exists())
         self.make_user('scan@example.com')
         res = self.client.post(url, {'email': 'scan@example.com', 'role': 'scanner', 'custom_caps': {'org.manage': True}}, format='json')
         self.assertEqual(res.status_code, 400)

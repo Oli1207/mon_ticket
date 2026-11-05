@@ -1,5 +1,3 @@
-import hashlib
-
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -7,10 +5,6 @@ from django.db import models
 from config.validators import IMAGE_VALIDATORS
 
 from .capabilities import ORG_ROLES, ROLE_DEFAULTS, resolve_capabilities
-
-
-def hash_token(raw_token):
-    return hashlib.sha256(raw_token.encode()).hexdigest()
 
 
 class Organization(models.Model):

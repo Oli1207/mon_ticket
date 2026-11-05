@@ -139,6 +139,8 @@ REST_FRAMEWORK = {
         'user': os.getenv('THROTTLE_USER', '300/min'),
         'login': os.getenv('THROTTLE_LOGIN', '10/min'),
         'register': os.getenv('THROTTLE_REGISTER', '5/hour'),
+        'email_verify': os.getenv('THROTTLE_EMAIL_VERIFY', '20/hour'),
+        'email_verify_resend': os.getenv('THROTTLE_EMAIL_VERIFY_RESEND', '5/hour'),
         'order_create': os.getenv('THROTTLE_ORDER_CREATE', '10/min'),
         'order_access': os.getenv('THROTTLE_ORDER_ACCESS', '60/min'),
         'payment_init': os.getenv('THROTTLE_PAYMENT_INIT', '10/min'),

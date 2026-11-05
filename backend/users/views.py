@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 from django.db import IntegrityError, transaction
 from rest_framework import generics, permissions, status
+from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -11,14 +12,21 @@ from .serializers import (
     ChangePasswordSerializer,
     EmailTokenObtainPairSerializer,
     RegisterSerializer,
+    ResendVerificationSerializer,
     UserSerializer,
+    VerifyEmailSerializer,
 )
+from .verification import confirm_verification, issue_verification
 
 User = get_user_model()
 
 REGISTER_GENERIC_MESSAGE = (
-    "Si cette adresse n'est pas deja utilisee, ton compte est cree. "
-    'Connecte-toi pour continuer.'
+    "Si cette adresse n'est pas deja utilisee, ton compte est cree et un email de confirmation "
+    "vient de t'etre envoye. Clique sur le lien pour l'activer."
+)
+RESEND_GENERIC_MESSAGE = (
+    "Si un compte non confirme existe pour cette adresse, un nouveau lien vient d'etre envoye. "
+    'Pense a verifier tes spams.'
 )
 
 
@@ -35,13 +43,45 @@ class RegisterView(APIView):
         if not User.objects.filter(email=data['email']).exists():
             try:
                 with transaction.atomic():
-                    User.objects.create_user(**data)
+                    user = User.objects.create_user(**data)
+                    issue_verification(user)
             except IntegrityError:
                 pass
         else:
             # Meme cout de hachage dans les deux branches : pas d'enumeration par le temps de reponse.
             make_password(data['password'])
         return Response({'detail': REGISTER_GENERIC_MESSAGE}, status=status.HTTP_201_CREATED)
+
+
+class VerifyEmailView(APIView):
+    permission_classes = (permissions.AllowAny,)
+    authentication_classes = ()
+    throttle_scope = 'email_verify'
+
+    def post(self, request):
+        serializer = VerifyEmailSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        if confirm_verification(serializer.validated_data['token']) is None:
+            raise ValidationError({'detail': 'Lien de confirmation invalide ou expire. Demande un nouveau lien.'})
+        return Response({'detail': 'Ton adresse email est confirmee. Bienvenue !'})
+
+
+class ResendVerificationView(APIView):
+    """Reponse identique dans tous les cas : ne revele ni l'existence ni l'etat d'un compte."""
+
+    permission_classes = (permissions.AllowAny,)
+    authentication_classes = ()
+    throttle_scope = 'email_verify_resend'
+
+    def post(self, request):
+        serializer = ResendVerificationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = User.objects.filter(
+            email=serializer.validated_data['email'], is_active=True, email_verified_at__isnull=True,
+        ).first()
+        if user is not None:
+            issue_verification(user)
+        return Response({'detail': RESEND_GENERIC_MESSAGE})
 
 
 class LoginView(TokenObtainPairView):

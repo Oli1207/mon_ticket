@@ -34,7 +34,9 @@ class APITestMixin:
         cache.clear()
         self.client = APIClient()
 
-    def make_user(self, email='user@example.com', **kwargs):
+    def make_user(self, email='user@example.com', verified=True, **kwargs):
+        if verified:
+            kwargs.setdefault('email_verified_at', timezone.now())
         return User.objects.create_user(email=email, password='Str0ng-pass!42', first_name='Awa', last_name='Kone', **kwargs)
 
     def auth(self, user):

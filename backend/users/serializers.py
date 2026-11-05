@@ -17,13 +17,15 @@ def validate_phone_value(value):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    email_verified = serializers.BooleanField(source='is_email_verified', read_only=True)
+
     class Meta:
         model = User
         fields = (
             'id', 'email', 'first_name', 'last_name', 'phone', 'city',
-            'avatar', 'is_organizer', 'is_staff', 'date_joined',
+            'avatar', 'is_organizer', 'is_staff', 'email_verified', 'date_joined',
         )
-        read_only_fields = ('id', 'email', 'is_organizer', 'is_staff', 'date_joined')
+        read_only_fields = ('id', 'email', 'is_organizer', 'is_staff', 'email_verified', 'date_joined')
         extra_kwargs = {
             'first_name': {'max_length': 150},
             'last_name': {'max_length': 150},
@@ -82,3 +84,14 @@ class ChangePasswordSerializer(serializers.Serializer):
     def validate_new_password(self, value):
         validate_password(value, user=self.context['request'].user)
         return value
+
+
+class VerifyEmailSerializer(serializers.Serializer):
+    token = serializers.CharField(max_length=128)
+
+
+class ResendVerificationSerializer(serializers.Serializer):
+    email = serializers.EmailField(max_length=254)
+
+    def validate_email(self, value):
+        return value.strip().lower()

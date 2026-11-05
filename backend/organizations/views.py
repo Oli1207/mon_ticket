@@ -12,10 +12,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from config.slugs import unique_slug
+from config.tokens import hash_token
+from users.verification import require_verified_email
 
 from .audit import diff_fields, log_action
 from .capabilities import ROLE_DEFAULTS, ROLE_OWNER, resolve_capabilities
-from .models import AuditLog, Invitation, Membership, Organization, hash_token
+from .models import AuditLog, Invitation, Membership, Organization
 from .permissions import HasOrgCapability, IsPlatformAdmin, OrgScopedMixin
 from .serializers import (
     AcceptInvitationSerializer,
@@ -77,6 +79,7 @@ class MyOrganizationsView(generics.ListCreateAPIView):
         return self.get_paginated_response(serializer.data)
 
     def create(self, request, *args, **kwargs):
+        require_verified_email(request.user)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         if Organization.objects.filter(owner=request.user).count() >= MAX_ORGS_PER_OWNER:
@@ -229,6 +232,7 @@ class AcceptInvitationView(APIView):
     throttle_scope = 'invitation'
 
     def post(self, request):
+        require_verified_email(request.user)
         serializer = AcceptInvitationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         invalid = ValidationError({'detail': 'Invitation invalide ou expiree. Demande une nouvelle invitation.'})

@@ -4,9 +4,10 @@ from unittest import mock
 from django.utils import timezone
 
 from config.testing import APITestCase
+from config.tokens import hash_token
 
 from .capabilities import ROLE_FINANCE, ROLE_PRODUCER
-from .models import AuditLog, Invitation, Membership, Organization, hash_token
+from .models import AuditLog, Invitation, Membership, Organization
 
 
 class OrganizationPermissionTests(APITestCase):
@@ -90,6 +91,15 @@ class OrganizationPermissionTests(APITestCase):
         self.assertEqual(res.status_code, 200)
         self.assertIn('checkin', res.data['my_capabilities'])
         self.assertEqual(self.client.post('/api/v1/organizer/invitations/accept/', {'token': raw}, format='json').status_code, 400)
+
+    def test_unverified_user_cannot_accept_invitation(self):
+        guest = self.make_user('guest@example.com', verified=False)
+        Invitation.objects.create(organization=self.org, email='guest@example.com', role='finance',
+                                  token_hash=hash_token('tok'), invited_by=self.owner,
+                                  expires_at=timezone.now() + timedelta(days=1))
+        self.auth(guest)
+        self.assertEqual(self.client.post('/api/v1/organizer/invitations/accept/', {'token': 'tok'}, format='json').status_code, 403)
+        self.assertFalse(Membership.objects.filter(user=guest).exists())
 
     def test_expired_invitation_rejected(self):
         guest = self.make_user('guest@example.com')
